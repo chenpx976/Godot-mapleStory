@@ -16,7 +16,7 @@ Test_Metadata_Directory="res://"
 
 config/name="冒险岛"
 run/main_scene="res://scene/MapleMap.tscn"
-config/features=PackedStringArray("4.0")
+config/features=PackedStringArray("4.2")
 run/low_processor_mode=true
 boot_splash/image="res://fm.jpg"
 boot_splash/fullsize=false
@@ -132,9 +132,9 @@ locale/locale_filter_mode=1
 
 [network]
 
+limits/debugger/max_chars_per_second=80000
 remote_fs/page_size=655360
 remote_fs/page_read_ahead=10
-limits/debugger/max_chars_per_second=80000
 
 [physics]
 

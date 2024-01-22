@@ -1,38 +1,41 @@
-@tool
+@icon("res://addons/cinematic_camera_2d/icons/cinematic_camera_2d.svg")
 class_name CinematicCamera2D
 extends Camera2D
 
 
-@icon("res://addons/cinematic_camera_2d/icons/cinematic_camera_2d.svg")
+## Cinematic camera node for 2D scenes.
+## Uses a VirtualCamera2D to create transitions between cameras.
 
 
-## Cinematic camera 2D node.
-## Uses a CameraData2D to create smooth transitions between cameras.
+## The node that this camera is supposed to follow.
+## The camera's global position will be set to this node's global position every frame.
+@export var follow_node: Node2D = null
+## The current virtual camera node. A scene may have several virtual cameras, but only needs one
+## cinematic camera. Update this value to transition between different cameras.
+@export var virtual_camera: VirtualCamera2D = null
+## The speed at which the transitions take place. Used by zoom and offset.
+@export var transition_speed: float = 1.0
 
 
-## Node path to the virtual camera to use.
-@export var _virtual_camera: NodePath:
-	set(value):
-		_virtual_camera = value
-		if Engine.is_editor_hint():
-			virtual_camera = get_node_or_null(_virtual_camera)
-## Reference to virtual camera node.
-## Change this value to transition to another camera.
-@onready var virtual_camera: VirtualCamera2D = get_node_or_null(_virtual_camera)
-
-
-## Called every frame.
+# Called every frame.
 func _process(delta: float) -> void:
-	if is_instance_valid(virtual_camera) and virtual_camera.is_inside_tree():
-		# Update camera position.
-		if not Engine.is_editor_hint():
-			virtual_camera.update_position(self)
-		# Set camera smoothing.
-		position_smoothing_speed = virtual_camera.smoothing_speed
-		# Update camera zoom.
-		if virtual_camera.zoom.x != 0.0:
-			zoom.x = lerp(zoom.x, virtual_camera.zoom.x, delta * virtual_camera.smoothing_speed)
-		if virtual_camera.zoom.y != 0.0:
-			zoom.y = lerp(zoom.y, virtual_camera.zoom.y, delta * virtual_camera.smoothing_speed)
-		# Update camera offset.
-		offset = lerp(offset, virtual_camera.offset, delta * virtual_camera.smoothing_speed)
+	# Update the camera if a virtual camera was assigned
+	if is_instance_valid(virtual_camera):
+		# Update zoom and offset
+		zoom = zoom.move_toward(virtual_camera.zoom, delta * max(0.0, transition_speed))
+		offset = offset.move_toward(virtual_camera.offset, delta * max(0.0, transition_speed))
+		# Clamp camera position within bounds
+		var half_bounds := get_viewport_rect().size / zoom / 2.0
+		var top_left := Vector2(virtual_camera.limit_left, virtual_camera.limit_top)
+		var bottom_right := Vector2(virtual_camera.limit_right, virtual_camera.limit_bottom)
+		top_left += virtual_camera.global_position + half_bounds - offset
+		bottom_right += virtual_camera.global_position - half_bounds - offset
+		# Follow the follow node if assigned
+		if is_instance_valid(follow_node):
+			global_position = follow_node.global_position.clamp(top_left, bottom_right)
+		# Use camera position if no follow node is assigned
+		else:
+			global_position = global_position.clamp(top_left, bottom_right)
+	# Use the same position as the follow node if no virtual camera is assigned
+	elif is_instance_valid(follow_node):
+		global_position = follow_node.global_position

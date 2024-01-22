@@ -76,5 +76,6 @@ anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
+[connection signal="Start_LoadMap" from="." to="." method="_on_start_load_map"]
 [connection signal="Start_LoadMap" from="." to="SubViewportContainer/SubViewport/map" method="_on_main_Start_LoadMap"]
 [connection signal="loadBackground" from="SubViewportContainer/SubViewport/map" to="SubViewportContainer/SubViewport/map/background" method="_on_map_load_background"]
